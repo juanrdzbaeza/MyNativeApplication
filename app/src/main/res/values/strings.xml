@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">MyNativeApplication</string>
+    <string name="asinc">Tareas Asincronas SI / NO</string>
+
+    <string name="checkbox">Tareas Asincronas SI / NO</string>
+
+    <string name="ya">YA!!!!!!!!</string>
+    <string name="hilos">Hilos</string>
+    <string name="tareas">Tareas</string>
+    <string name="aprietame">APRIETAME</string>
+</resources>
