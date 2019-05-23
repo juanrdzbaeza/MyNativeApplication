@@ -18,10 +18,12 @@ public class MainActivity extends AppCompatActivity {
   String calculating = "Calculating...";
   TextView tv;
   TextView ya;
+  TextView nv;
   EditText hilos;
   EditText tareas;
   Integer nHilos;
   Integer nTareas;
+  Integer nVuelta = 0;
 
   double tiempoInicio, tiempoFin, tiempoTotal;
 
@@ -48,14 +50,18 @@ public class MainActivity extends AppCompatActivity {
     calculate_button    = (Button)findViewById(R.id.button);
     tv                  = (TextView)findViewById(R.id.sample_text);
     ya                  = (TextView)findViewById(R.id.ya);
+    nv                  = (TextView)findViewById(R.id.nv);
     hilos               = (EditText)findViewById(R.id.hilostext);
     tareas              = (EditText)findViewById((R.id.tareastext));
+    nVuelta = 0;
 
     calculate_button.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View v) {
         tv.setText(calculating);
+        nv.setText(calculating);
         tv.setTextColor(Color.GRAY);
+        nv.setTextColor(Color.GRAY);
         ya.setVisibility(View.INVISIBLE);
         // Ejemplo de la llamada a un método nativo
 
@@ -81,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
           String stringtiempo = String.valueOf(tiempoTotal); //Paso el resultado a string
           tv.setText(stringtiempo + " seg.");
           tv.setTextColor(Color.RED);
+          nv.setText(String.valueOf(nVuelta));
+          nv.setTextColor(Color.BLUE);
+          nVuelta = 0;
           ya.setVisibility(View.VISIBLE);
 
         } else {  // lanzar tarea asincrona para hacer el trabajo
@@ -107,8 +116,8 @@ public class MainActivity extends AppCompatActivity {
 
   public double histograma(Integer taskId, Integer nTasks) {
     long aux = 0;
-    int ini = (int)((long)taskId*tam/nTasks);
-    int fin = (int)((long)(taskId+1)*tam/nTasks);
+    int ini = (int)((long)taskId*tam/nTasks);     // => 3*1000/4 = 750
+    int fin = (int)((long)(taskId+1)*tam/nTasks); // => (3+1)*1000/4 = 1000
 
     for (int i = 0; i < 256; i++) // Inicializa el histograma.
       for (int k = 0; k < 3; k++) h[k][i] = 0;
@@ -125,6 +134,7 @@ public class MainActivity extends AppCompatActivity {
           for (int x = 0; x < 256; x++) {
             aux = (long) (h[k][x] * h[k][x] * h[k][x] * h[k][x] - h[k][x] * h[k][x] * h[k][x] + h[k][x] * h[k][x]);
             h[k][x]= (int) (aux % 256);
+            nVuelta++;
           }
           imagen[k][i][j] = (short)(imagen[k][i][j] * h[k][imagen[k][i][j]]);
         }
@@ -152,6 +162,8 @@ public class MainActivity extends AppCompatActivity {
       String stringtiempo = String.valueOf(tiempoTotal); //Pasa a string
       tv.setText(stringtiempo + " seg.");
       tv.setTextColor(Color.RED);
+      nv.setText(String.valueOf(nVuelta));
+      nVuelta = 0;
       ya.setVisibility(View.VISIBLE);
     }
   }
