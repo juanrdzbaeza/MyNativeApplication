@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,15 +16,11 @@ public class MainActivity extends AppCompatActivity {
 
   Button calculate_button;
   CheckBox asyncTaskBox;
+  RadioButton threadsButton;
   String calculating = "Calculating...";
-  TextView tv;
-  TextView ya;
-  TextView nv;
-  EditText hilos;
-  EditText tareas;
-  Integer nHilos;
-  Integer nTareas;
-  Integer nVuelta = 0;
+  TextView tv, nv;
+  EditText hilos, tareas;
+  Integer nHilos, nTareas, nVuelta = 0;
 
   double tiempoInicio, tiempoFin, tiempoTotal;
 
@@ -45,15 +42,36 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
 
-
+    threadsButton       = (RadioButton)findViewById(R.id.javathreadradiobutton);
     asyncTaskBox        = (CheckBox)findViewById(R.id.asinc);
     calculate_button    = (Button)findViewById(R.id.button);
     tv                  = (TextView)findViewById(R.id.sample_text);
-    ya                  = (TextView)findViewById(R.id.ya);
     nv                  = (TextView)findViewById(R.id.nv);
     hilos               = (EditText)findViewById(R.id.hilostext);
     tareas              = (EditText)findViewById((R.id.tareastext));
     nVuelta = 0;
+
+    // No se desea lanzar hebras si no está activa la tarea asíncrona.
+    threadsButton.setEnabled(false);
+    hilos.setEnabled(false);
+    tareas.setEnabled(false);
+
+    // Habilitar las hebras Java solo cuando se active tarea asincrona
+    asyncTaskBox.setOnClickListener(new View.OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        if(asyncTaskBox.isChecked()) {
+          threadsButton.setEnabled(true);
+          hilos.setEnabled(true);
+          tareas.setEnabled(true);
+        }
+        else {
+          threadsButton.setEnabled(false);
+          hilos.setEnabled(false);
+          tareas.setEnabled(false);
+        }
+      }
+    });
 
     calculate_button.setOnClickListener(new View.OnClickListener() {
       @Override
@@ -62,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
         nv.setText(calculating);
         tv.setTextColor(Color.GRAY);
         nv.setTextColor(Color.GRAY);
-        ya.setVisibility(View.INVISIBLE);
         // Ejemplo de la llamada a un método nativo
 
         if (hilos.getText().toString().matches("")) {
@@ -90,7 +107,6 @@ public class MainActivity extends AppCompatActivity {
           nv.setText(String.valueOf(nVuelta));
           nv.setTextColor(Color.BLUE);
           nVuelta = 0;
-          ya.setVisibility(View.VISIBLE);
 
         } else {  // lanzar tarea asincrona para hacer el trabajo
           new myAsyncTask().execute();
@@ -164,7 +180,6 @@ public class MainActivity extends AppCompatActivity {
       tv.setTextColor(Color.RED);
       nv.setText(String.valueOf(nVuelta));
       nVuelta = 0;
-      ya.setVisibility(View.VISIBLE);
     }
   }
 }
