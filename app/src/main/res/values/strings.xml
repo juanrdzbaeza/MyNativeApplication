@@ -9,5 +9,9 @@
     <string name="tareas">Tareas</string>
     <string name="numero_de_vueltas">Numero de vueltas</string>
     <string name="hebras_java">Hebras Java</string>
+    <string name="executor">Executor</string>
+    <string name="jni_c">JNI C++</string>
+    <string name="hebras_c">Hebras C++</string>
+    <string name="c_openmp">C++ OpenMP</string>
 
 </resources>

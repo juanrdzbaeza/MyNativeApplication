@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
   Button calculate_button;
   CheckBox asyncTaskBox;
-  RadioButton threadsButton, executorButton, cppjniButton;
+  RadioButton threadsButton, executorButton, cppjniButton, cppthreadsButton, cppopenmpButton;
   String calculating = "Calculating...";
   TextView tv, nv;
   EditText hilos, tareas;
@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
   // Used to load the 'native-lib' library on application startup.
 
-  /**
+  /*
    * madre del cordero
    */
   static {
@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     threadsButton       = (RadioButton)findViewById(R.id.javathreadradiobutton);
     executorButton      = (RadioButton)findViewById(R.id.executorradiobutton);
     cppjniButton        = (RadioButton) findViewById(R.id.cppjniradiobutton);
+    cppthreadsButton    = (RadioButton) findViewById(R.id.cppthreadsradiobutton);
+    cppopenmpButton     = (RadioButton) findViewById(R.id.cppopenmpradiobutton);
     asyncTaskBox        = (CheckBox)findViewById(R.id.asinc);
     calculate_button    = (Button)findViewById(R.id.button);
     tv                  = (TextView)findViewById(R.id.sample_text);
@@ -61,6 +63,8 @@ public class MainActivity extends AppCompatActivity {
     threadsButton.setEnabled(false);
     executorButton.setEnabled(false);
     cppjniButton.setEnabled(false);
+    cppthreadsButton.setEnabled(false);
+    cppopenmpButton.setEnabled(false);
     hilos.setEnabled(false);
     tareas.setEnabled(false);
 
@@ -72,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
           threadsButton.setEnabled(true);
           executorButton.setEnabled(true);
           cppjniButton.setEnabled(true);
+          cppthreadsButton.setEnabled(true);
+          cppopenmpButton.setEnabled(true);
           hilos.setEnabled(true);
           tareas.setEnabled(true);
         }
@@ -79,6 +85,8 @@ public class MainActivity extends AppCompatActivity {
           threadsButton.setEnabled(false);
           executorButton.setEnabled(false);
           cppjniButton.setEnabled(false);
+          cppthreadsButton.setEnabled(false);
+          cppopenmpButton.setEnabled(false);
           hilos.setEnabled(false);
           tareas.setEnabled(false);
         }
@@ -179,10 +187,27 @@ public class MainActivity extends AppCompatActivity {
 
       } else if (cppjniButton.isChecked()) {
         // hacer el trabajo usando C++ JNI
+        int hvector[] = new int[3 * 256]; //vector con el histograma
+        short imagenvector[] = new short[3 * tam * tam];
+        tiempoInicio = System.nanoTime();
+        histogramaC(tam, imagenvector, hvector);
+        tiempoFin = System.nanoTime();
+
+      } else if (cppthreadsButton.isChecked()) {
+        // hacer el trabajo usando hebras C++
+        int hvector[] = new int[3 * 256]; //vector con el histograma
+        short imagenvector[] = new short[3 * tam * tam];
+        int nThreads = nHilos;
+        tiempoInicio = System.nanoTime();
+        histogramaCpth(tam, nThreads, imagenvector, hvector);
+        tiempoFin = System.nanoTime();
+
+      } else if (cppopenmpButton.isChecked()){
+        // hacer el trabajo usando C++ OpenMP
         int hvector[] = new int[3*256]; //vector con el histograma
         short imagenvector[] = new short[3*tam*tam];
         tiempoInicio = System.nanoTime();
-        histogramaC(tam, imagenvector, hvector);
+        histogramaOpenMP(tam, imagenvector, hvector);
         tiempoFin = System.nanoTime();
 
       } else { // se hace el trabajo en el thread de background
@@ -230,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
     Thread[] threads = new Thread[nThreads];
     int count = 0;
     while (count < numtasks) {
-      /**
+      /*
        * Se van a crear tantos threads como tareas especificadas
        * pero en tandas de nThreads cada vez
        */
@@ -260,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
     int nThreads = nHilos;
     if (numtasks > tam) numtasks = tam;
 
-    /**
+    /*
      * se crea un executor de typo FixedThreadPool con tantos threads
      * como numero de procesadores
      */
@@ -280,5 +305,7 @@ public class MainActivity extends AppCompatActivity {
   } // fin fin doExecutorWork()
 
 
-  public native void histogramaC(int tam, short[] imagen, int... h);
+  public native void histogramaC(int tam, short[] imagen, int[] h);
+  public native void histogramaCpth(int tam, int nth, short[] imagen, int []h);
+  public native void histogramaOpenMP(int tam, short[] imagen, int []h);
 }
