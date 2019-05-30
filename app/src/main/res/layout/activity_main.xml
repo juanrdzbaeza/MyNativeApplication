@@ -153,6 +153,14 @@
             android:text="Executor"
             android:textSize="22sp"
             android:visibility="visible" />
+        <RadioButton
+            android:id="@+id/cppjniradiobutton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="JNI C++"
+            android:textSize="22sp"
+            android:visibility="visible" />
     </RadioGroup>
 
 

@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
   Button calculate_button;
   CheckBox asyncTaskBox;
-  RadioButton threadsButton, executorButton;
+  RadioButton threadsButton, executorButton, cppjniButton;
   String calculating = "Calculating...";
   TextView tv, nv;
   EditText hilos, tareas;
@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
 
     threadsButton       = (RadioButton)findViewById(R.id.javathreadradiobutton);
     executorButton      = (RadioButton)findViewById(R.id.executorradiobutton);
+    cppjniButton        = (RadioButton) findViewById(R.id.cppjniradiobutton);
     asyncTaskBox        = (CheckBox)findViewById(R.id.asinc);
     calculate_button    = (Button)findViewById(R.id.button);
     tv                  = (TextView)findViewById(R.id.sample_text);
@@ -59,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     // No se desea lanzar hebras si no está activa la tarea asíncrona.
     threadsButton.setEnabled(false);
     executorButton.setEnabled(false);
+    cppjniButton.setEnabled(false);
     hilos.setEnabled(false);
     tareas.setEnabled(false);
 
@@ -69,12 +71,14 @@ public class MainActivity extends AppCompatActivity {
         if(asyncTaskBox.isChecked()) {
           threadsButton.setEnabled(true);
           executorButton.setEnabled(true);
+          cppjniButton.setEnabled(true);
           hilos.setEnabled(true);
           tareas.setEnabled(true);
         }
         else {
           threadsButton.setEnabled(false);
           executorButton.setEnabled(false);
+          cppjniButton.setEnabled(false);
           hilos.setEnabled(false);
           tareas.setEnabled(false);
         }
@@ -173,7 +177,15 @@ public class MainActivity extends AppCompatActivity {
         doExecutorWork();
         tiempoFin = System.nanoTime();
 
-      }else { // se hace el trabajo en el thread de background
+      } else if (cppjniButton.isChecked()) {
+        // hacer el trabajo usando C++ JNI
+        int hvector[] = new int[3*256]; //vector con el histograma
+        short imagenvector[] = new short[3*tam*tam];
+        tiempoInicio = System.nanoTime();
+        histogramaC(tam, imagenvector, hvector);
+        tiempoFin = System.nanoTime();
+
+      } else { // se hace el trabajo en el thread de background
         tiempoInicio = System.nanoTime();
         tiempoFin = histograma(0,1);
 
@@ -267,4 +279,6 @@ public class MainActivity extends AppCompatActivity {
     }
   } // fin fin doExecutorWork()
 
+
+  public native void histogramaC(int tam, short[] imagen, int... h);
 }
