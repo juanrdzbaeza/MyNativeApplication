@@ -11,16 +11,20 @@ import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 public class MainActivity extends AppCompatActivity {
   int h[][] = new int[3][256]; //array con el histograma
 
   Button calculate_button;
   CheckBox asyncTaskBox;
-  RadioButton threadsButton;
+  RadioButton threadsButton, executorButton;
   String calculating = "Calculating...";
   TextView tv, nv;
   EditText hilos, tareas;
-  Integer nHilos, nTareas, nVuelta = 0;
+  Integer nHilos, nTareas /*nVuelta = 0*/;
 
   double tiempoInicio, tiempoFin, tiempoTotal;
 
@@ -43,16 +47,18 @@ public class MainActivity extends AppCompatActivity {
     setContentView(R.layout.activity_main);
 
     threadsButton       = (RadioButton)findViewById(R.id.javathreadradiobutton);
+    executorButton      = (RadioButton)findViewById(R.id.executorradiobutton);
     asyncTaskBox        = (CheckBox)findViewById(R.id.asinc);
     calculate_button    = (Button)findViewById(R.id.button);
     tv                  = (TextView)findViewById(R.id.sample_text);
     nv                  = (TextView)findViewById(R.id.nv);
     hilos               = (EditText)findViewById(R.id.hilostext);
     tareas              = (EditText)findViewById((R.id.tareastext));
-    nVuelta = 0;
+    //nVuelta = 0;
 
     // No se desea lanzar hebras si no está activa la tarea asíncrona.
     threadsButton.setEnabled(false);
+    executorButton.setEnabled(false);
     hilos.setEnabled(false);
     tareas.setEnabled(false);
 
@@ -62,11 +68,13 @@ public class MainActivity extends AppCompatActivity {
       public void onClick(View v) {
         if(asyncTaskBox.isChecked()) {
           threadsButton.setEnabled(true);
+          executorButton.setEnabled(true);
           hilos.setEnabled(true);
           tareas.setEnabled(true);
         }
         else {
           threadsButton.setEnabled(false);
+          executorButton.setEnabled(false);
           hilos.setEnabled(false);
           tareas.setEnabled(false);
         }
@@ -104,11 +112,12 @@ public class MainActivity extends AppCompatActivity {
           String stringtiempo = String.valueOf(tiempoTotal); //Paso el resultado a string
           tv.setText(stringtiempo + " seg.");
           tv.setTextColor(Color.RED);
-          nv.setText(String.valueOf(nVuelta));
-          nv.setTextColor(Color.BLUE);
-          nVuelta = 0;
+          //nv.setText(String.valueOf(nVuelta));
+          //nv.setTextColor(Color.BLUE);
+          //nVuelta = 0;
 
-        } else {  // lanzar tarea asincrona para hacer el trabajo
+        } else {
+          // lanzar tarea asincrona para hacer el trabajo
           new myAsyncTask().execute();
 
         }
@@ -118,17 +127,6 @@ public class MainActivity extends AppCompatActivity {
     });
 
   }
-
-    /*public double histograma(int tam, short[][][] imagen) {
-        double tiempoInicio = System.nanoTime();
-        for (int i = 0; i < tam; i++)
-            for (int j = 0; j < tam; j++)
-                for (int k = 0; k < 3; k++)
-                    h[k][imagen[k][i][j]]++; // Contabiliza el número de veces que aparece cada valor.
-        return (System.nanoTime() - tiempoInicio) / 1000000000.0;
-    }*/
-
-  // int tam, short[][][] imagen
 
   public double histograma(Integer taskId, Integer nTasks) {
     long aux = 0;
@@ -150,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
           for (int x = 0; x < 256; x++) {
             aux = (long) (h[k][x] * h[k][x] * h[k][x] * h[k][x] - h[k][x] * h[k][x] * h[k][x] + h[k][x] * h[k][x]);
             h[k][x]= (int) (aux % 256);
-            nVuelta++;
+            // nVuelta++;
           }
           imagen[k][i][j] = (short)(imagen[k][i][j] * h[k][imagen[k][i][j]]);
         }
@@ -158,15 +156,28 @@ public class MainActivity extends AppCompatActivity {
     return System.nanoTime();
   }
 
-
   // Tarea asincrona
   private class myAsyncTask extends AsyncTask<Void,Void,Void> {
     // Ejemplo de la llamada a un método nativo
     @Override
     protected Void doInBackground(Void... v) {
-      tiempoInicio = System.nanoTime();
-      // se hace el trabajo en el thread de background
-      tiempoFin = histograma(nHilos, nTareas);
+      if (threadsButton.isChecked()) {
+        // hacer el trabajo usando Java Threads
+        tiempoInicio = System.nanoTime();
+        doThreadWork();
+        tiempoFin = System.nanoTime();
+
+      } else if (executorButton.isChecked()) {
+        // hacer el trabajo usando un Executor
+        tiempoInicio = System.nanoTime();
+        doExecutorWork();
+        tiempoFin = System.nanoTime();
+
+      }else { // se hace el trabajo en el thread de background
+        tiempoInicio = System.nanoTime();
+        tiempoFin = histograma(0,1);
+
+      }
 
       return null;
     }
@@ -178,8 +189,82 @@ public class MainActivity extends AppCompatActivity {
       String stringtiempo = String.valueOf(tiempoTotal); //Pasa a string
       tv.setText(stringtiempo + " seg.");
       tv.setTextColor(Color.RED);
-      nv.setText(String.valueOf(nVuelta));
-      nVuelta = 0;
+      //nv.setText(String.valueOf(nVuelta));
+      //nVuelta = 0;
     }
   }
+
+  // clase que representa las tareas, su método "run" es el que realiza el trabajo efectivo
+  public class myTask implements Runnable {
+    private int myId;
+    private int nTasks;
+    Double tiempoAuxiliar;
+    myTask(int _myId, int _nTasks) { myId = _myId; nTasks = _nTasks; }
+
+    // método para hacer el trabajo de la tarea
+    @Override
+    public void run() {
+      tiempoAuxiliar = histograma(myId, nTasks);
+    }
+  }
+
+  // metodo para hacer el trabajo con Java Threads directamente
+  public void doThreadWork() {
+    // hacer el trabajo usando Java Threads
+    int numtasks = nTareas;
+    int nThreads = nHilos;
+    if (numtasks > tam) numtasks = tam;
+
+    Thread[] threads = new Thread[nThreads];
+    int count = 0;
+    while (count < numtasks) {
+      /**
+       * Se van a crear tantos threads como tareas especificadas
+       * pero en tandas de nThreads cada vez
+       */
+      int nth = 0;
+      while (nth < nThreads && count < numtasks) {
+        // se crean nThreads y se ponen a trabajar (start)
+        threads[nth] = new Thread(new myTask(count, numtasks));
+        threads[nth].start();
+        nth++;
+        count++;
+      }
+      for (int i = 0; i < nth; i++) {
+        // se espera a que terminen los nThreads que están trabajando antes de crear otros
+        try {
+          threads[i].join();
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+  } // fin doThreadWork()
+
+  // metodo para hacer el trabajo usando Executor (FixedThreadPool)
+  public void doExecutorWork() {
+    // se lee el numero de tareas especificado por el usuario
+    int numtasks = nTareas;
+    int nThreads = nHilos;
+    if (numtasks > tam) numtasks = tam;
+
+    /**
+     * se crea un executor de typo FixedThreadPool con tantos threads
+     * como numero de procesadores
+     */
+    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    // se crean todas las tasks indicadas y se mandan a ejecutar en el executor
+    for (int i=0; i < numtasks; i++) {
+      executor.execute(new myTask(i, numtasks));
+    }
+    // se para el Executor para que no acepte mas tareas y termine las lanzadas
+    executor.shutdown();
+    try {
+      // se espera a que terminen todas las tareas pendientes en el Executor
+      executor.awaitTermination(10, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  } // fin fin doExecutorWork()
+
 }
